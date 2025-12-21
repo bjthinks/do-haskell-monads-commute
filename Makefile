@@ -1,5 +1,5 @@
 all:
-        cabal run
+	cabal run
 
 clean:
-        cabal clean
+	cabal clean
