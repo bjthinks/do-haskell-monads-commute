@@ -21,4 +21,4 @@ all = do
   stateWriter
 
 main :: IO ()
-main = mapM_ putStrLn $ execWriter all
+main = putStr $ execWriter all
