@@ -14,11 +14,11 @@ stateWriter :: Writer String ()
 stateWriter = do
   return ()
 
-all :: Writer String ()
-all = do
+allPairs :: Writer String ()
+allPairs = do
   readerState
   readerWriter
   stateWriter
 
 main :: IO ()
-main = putStr $ execWriter all
+main = putStr $ execWriter allPairs
