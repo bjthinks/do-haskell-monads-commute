@@ -1,19 +1,24 @@
 module Main where
 
-readerState :: IO ()
+import Control.Monad.Trans.Writer
+
+readerState :: Writer String ()
 readerState = do
   return ()
 
-readerWriter :: IO ()
+readerWriter :: Writer String ()
 readerWriter = do
   return ()
 
-stateWriter :: IO ()
+stateWriter :: Writer String ()
 stateWriter = do
   return ()
 
-main :: IO ()
-main = do
+all :: Writer String ()
+all = do
   readerState
   readerWriter
   stateWriter
+
+main :: IO ()
+main = mapM_ putStrLn $ execWriter all
