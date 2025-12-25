@@ -101,6 +101,28 @@ maybeState = do
   line "of a failing computation is handled differently."
   return ()
 
+maybeWriter :: Writer String ()
+maybeWriter = do
+  line "Composing Maybe and Writer monads."
+  line "do { tell \"xyzzy\" }"
+  let doA = do { tell "xyzzy" } :: MaybeT (Writer String) ()
+      doB = do { tell "xyzzy" } :: WriterT String (Maybe) ()
+  let resultA = runWriter (runMaybeT doA)
+  let resultB = runWriterT doB
+  line $ "Monad = MaybeT (Writer String), result: " ++ show resultA
+  line $ "Monad = WriterT String (Maybe), result: " ++ show resultB
+
+  line "do { tell \"xyzzy\" ; mzero }"
+  let doC = do { tell "xyzzy" ; mzero } :: MaybeT (Writer String) ()
+      doD = do { tell "xyzzy" ; mzero } :: WriterT String (Maybe) ()
+  let resultC = runWriter (runMaybeT doC)
+  let resultD = runWriterT doD
+  line $ "Monad = MaybeT (Writer String), result: " ++ show resultC
+  line $ "Monad = WriterT String (Maybe), result: " ++ show resultD
+  line "Conclusion: Maybe and Writer do not commute, because the written value"
+  line "is handled differently."
+  return ()
+
 allPairs :: Writer String ()
 allPairs = do
   readerState
@@ -112,6 +134,8 @@ allPairs = do
   maybeReader
   nl
   maybeState
+  nl
+  maybeWriter
 
 main :: IO ()
 main = putStr $ execWriter allPairs
