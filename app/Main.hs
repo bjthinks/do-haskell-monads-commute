@@ -17,8 +17,10 @@ readerState = do
   let doA = do { x <- get ; y <- ask ; put (x+y) } :: ReaderT Int (State Int) ()
       doB = do { x <- get ; y <- ask ; put (x+y) } :: StateT Int (Reader Int) ()
   line "Running with Reader data 2, State data 3"
-  let resultA = runState (runReader 2 doA) 3
-  line $ "ReaderT Int (State Int) result: " ++ show resultA
+  let resultA = runState (runReaderT doA 2) 3
+  let resultB = runReader (runStateT doB 3) 2
+  line $ "Monad = ReaderT Int (State Int), result: " ++ show resultA
+  line $ "Monad = StateT Int (Reader Int), result: " ++ show resultB
   return ()
 
 readerWriter :: Writer String ()
