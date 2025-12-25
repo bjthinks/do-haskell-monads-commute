@@ -1,6 +1,7 @@
 module Main where
 
 import Control.Monad
+import Control.Monad.Except
 import Control.Monad.Trans.Maybe
 import Control.Monad.Reader
 import Control.Monad.State
@@ -153,6 +154,30 @@ exceptReader = do
   line "Conclusion: Except and Reader commute."
   return ()
 
+exceptState :: Writer String ()
+exceptState = do
+  line "Composing Except and State monads."
+  line "do { x <- get ; put (x+1) }"
+  let doA = do { x <- get ; put (x+1) } :: ExceptT String (State Int) ()
+      doB = do { x <- get ; put (x+1) } :: StateT Int (Except String) ()
+  line "Running with State data 3"
+  let resultA = runState (runExceptT doA) 3
+  let resultB = runExcept (runStateT doB 3)
+  line $ "Monad = ExceptT String (State Int), result: " ++ show resultA
+  line $ "Monad = StateT Int (Except String), result: " ++ show resultB
+
+  line "do { x <- get ; put (x+1) ; mzero }"
+  let doC = do { x <- get ; put (x+1) ; throwError "error" } :: ExceptT String (State Int) ()
+      doD = do { x <- get ; put (x+1) ; throwError "error" } :: StateT Int (Except String) ()
+  line "Running with State data 3"
+  let resultC = runState (runExceptT doC) 3
+  let resultD = runExcept (runStateT doD 3)
+  line $ "Monad = ExceptT String (State Int), result: " ++ show resultC
+  line $ "Monad = StateT Int (Except String), result: " ++ show resultD
+  line "Conclusion: Except and State do not commute, because the resulting"
+  line "state of a failing computation is handled differently."
+  return ()
+
 allPairs :: Writer String ()
 allPairs = do
   readerState
@@ -168,6 +193,8 @@ allPairs = do
   maybeWriter
   nl
   exceptReader
+  nl
+  exceptState
 
 main :: IO ()
 main = putStr $ execWriter allPairs
