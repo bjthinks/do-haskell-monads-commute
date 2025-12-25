@@ -130,6 +130,29 @@ maybeWriter = do
   line "is handled differently."
   return ()
 
+exceptReader :: Writer String ()
+exceptReader = do
+  line "Composing Except and Reader monads."
+  line "do { _ <- ask ; return () }"
+  let doA = do { _ <- ask ; return () } :: ExceptT String (Reader Int) ()
+      doB = do { _ <- ask ; return () } :: ReaderT Int (Except String) ()
+  line "Running with Reader data 2"
+  let resultA = runReader (runExceptT doA) 2
+  let resultB = runExcept (runReaderT doB 2)
+  line $ "Monad = ExceptT String (Reader Int), result: " ++ show resultA
+  line $ "Monad = ReaderT Int (Except String), result: " ++ show resultB
+
+  line "do { _ <- ask ; throwError \"error\" }"
+  let doC = do { _ <- ask ; throwError "error" } :: ExceptT String (Reader Int) ()
+      doD = do { _ <- ask ; throwError "error" } :: ReaderT Int (Except String) ()
+  line "Running with Reader data 2"
+  let resultC = runReader (runExceptT doC) 2
+  let resultD = runExcept (runReaderT doD 2)
+  line $ "Monad = ExceptT String (Reader Int), result: " ++ show resultC
+  line $ "Monad = ReaderT Int (Except String), result: " ++ show resultD
+  line "Conclusion: Except and Reader commute."
+  return ()
+
 allPairs :: Writer String ()
 allPairs = do
   readerState
@@ -143,6 +166,8 @@ allPairs = do
   maybeState
   nl
   maybeWriter
+  nl
+  exceptReader
 
 main :: IO ()
 main = putStr $ execWriter allPairs
