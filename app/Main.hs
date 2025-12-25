@@ -77,6 +77,30 @@ maybeReader = do
   line "Conclusion: Maybe and Reader commute."
   return ()
 
+maybeState :: Writer String ()
+maybeState = do
+  line "Composing Maybe and State monads."
+  line "do { x <- get ; put (x+1) }"
+  let doA = do { x <- get ; put (x+1) } :: MaybeT (State Int) ()
+      doB = do { x <- get ; put (x+1) } :: StateT Int (Maybe) ()
+  line "Running with State data 3"
+  let resultA = runState (runMaybeT doA) 3
+  let resultB = runStateT doB 3
+  line $ "Monad = MaybeT (State Int), result: " ++ show resultA
+  line $ "Monad = StateT Int (Maybe), result: " ++ show resultB
+
+  line "do { x <- get ; put (x+1) ; mzero }"
+  let doC = do { x <- get ; put (x+1) ; mzero } :: MaybeT (State Int) ()
+      doD = do { x <- get ; put (x+1) ; mzero } :: StateT Int (Maybe) ()
+  line "Running with State data 3"
+  let resultC = runState (runMaybeT doC) 3
+  let resultD = runStateT doD 3
+  line $ "Monad = MaybeT (State Int), result: " ++ show resultC
+  line $ "Monad = StateT Int (Maybe), result: " ++ show resultD
+  line "Conclusion: Maybe and State do not commute, because the resulting state"
+  line "of a failing computation is handled differently."
+  return ()
+
 allPairs :: Writer String ()
 allPairs = do
   readerState
@@ -86,6 +110,8 @@ allPairs = do
   stateWriter
   nl
   maybeReader
+  nl
+  maybeState
 
 main :: IO ()
 main = putStr $ execWriter allPairs
