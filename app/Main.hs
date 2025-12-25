@@ -62,6 +62,8 @@ maybeReader = do
       doB = do { _ <- ask ; return () } :: ReaderT Int (Maybe) ()
   line "Running with Reader data 2"
   let resultA = runReader (runMaybeT doA) 2
+  -- if there were a runMaybe function, it would be defined as:
+  -- runMaybe = id :: Maybe a -> Maybe a
   let resultB = runReaderT doB 2
   line $ "Monad = MaybeT (Reader Int), result: " ++ show resultA
   line $ "Monad = ReaderT Int (Maybe), result: " ++ show resultB
@@ -71,6 +73,7 @@ maybeReader = do
       doD = do { _ <- ask ; mzero } :: ReaderT Int (Maybe) ()
   line "Running with Reader data 2"
   let resultC = runReader (runMaybeT doC) 2
+  -- runMaybe = id
   let resultD = runReaderT doD 2
   line $ "Monad = MaybeT (Reader Int), result: " ++ show resultC
   line $ "Monad = ReaderT Int (Maybe), result: " ++ show resultD
@@ -85,6 +88,7 @@ maybeState = do
       doB = do { x <- get ; put (x+1) } :: StateT Int (Maybe) ()
   line "Running with State data 3"
   let resultA = runState (runMaybeT doA) 3
+  -- runMaybe = id
   let resultB = runStateT doB 3
   line $ "Monad = MaybeT (State Int), result: " ++ show resultA
   line $ "Monad = StateT Int (Maybe), result: " ++ show resultB
@@ -94,6 +98,7 @@ maybeState = do
       doD = do { x <- get ; put (x+1) ; mzero } :: StateT Int (Maybe) ()
   line "Running with State data 3"
   let resultC = runState (runMaybeT doC) 3
+  -- runMaybe = id
   let resultD = runStateT doD 3
   line $ "Monad = MaybeT (State Int), result: " ++ show resultC
   line $ "Monad = StateT Int (Maybe), result: " ++ show resultD
@@ -108,6 +113,7 @@ maybeWriter = do
   let doA = do { tell "xyzzy" } :: MaybeT (Writer String) ()
       doB = do { tell "xyzzy" } :: WriterT String (Maybe) ()
   let resultA = runWriter (runMaybeT doA)
+  -- runMaybe = id
   let resultB = runWriterT doB
   line $ "Monad = MaybeT (Writer String), result: " ++ show resultA
   line $ "Monad = WriterT String (Maybe), result: " ++ show resultB
@@ -116,6 +122,7 @@ maybeWriter = do
   let doC = do { tell "xyzzy" ; mzero } :: MaybeT (Writer String) ()
       doD = do { tell "xyzzy" ; mzero } :: WriterT String (Maybe) ()
   let resultC = runWriter (runMaybeT doC)
+  -- runMaybe = id
   let resultD = runWriterT doD
   line $ "Monad = MaybeT (Writer String), result: " ++ show resultC
   line $ "Monad = WriterT String (Maybe), result: " ++ show resultD
