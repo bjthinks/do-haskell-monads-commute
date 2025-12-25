@@ -1,5 +1,7 @@
 module Main where
 
+import Control.Monad
+import Control.Monad.Trans.Maybe
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Writer
@@ -52,6 +54,29 @@ stateWriter = do
   line "Conclusion: State and Writer essentially commute."
   return ()
 
+maybeReader :: Writer String ()
+maybeReader = do
+  line "Composing Maybe and Reader monads."
+  line "do { _ <- ask ; return () }"
+  let doA = do { _ <- ask ; return () } :: MaybeT (Reader Int) ()
+      doB = do { _ <- ask ; return () } :: ReaderT Int (Maybe) ()
+  line "Running with Reader data 2"
+  let resultA = runReader (runMaybeT doA) 2
+  let resultB = runReaderT doB 2
+  line $ "Monad = MaybeT (Reader Int), result: " ++ show resultA
+  line $ "Monad = ReaderT Int (Maybe), result: " ++ show resultB
+
+  line "do { _ <- ask ; mzero }"
+  let doC = do { _ <- ask ; mzero } :: MaybeT (Reader Int) ()
+      doD = do { _ <- ask ; mzero } :: ReaderT Int (Maybe) ()
+  line "Running with Reader data 2"
+  let resultC = runReader (runMaybeT doC) 2
+  let resultD = runReaderT doD 2
+  line $ "Monad = MaybeT (Reader Int), result: " ++ show resultC
+  line $ "Monad = ReaderT Int (Maybe), result: " ++ show resultD
+  line "Conclusion: Maybe and Reader commute."
+  return ()
+
 allPairs :: Writer String ()
 allPairs = do
   readerState
@@ -59,6 +84,8 @@ allPairs = do
   readerWriter
   nl
   stateWriter
+  nl
+  maybeReader
 
 main :: IO ()
 main = putStr $ execWriter allPairs
