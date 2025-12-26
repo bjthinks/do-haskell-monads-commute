@@ -78,6 +78,17 @@ maybeReader = do
   let resultD = runReaderT doD 2
   line $ "Monad = MaybeT (Reader Int), result: " ++ show resultC
   line $ "Monad = ReaderT Int (Maybe), result: " ++ show resultD
+
+  line "do { _ <- ask ; mzero } `mplus` return ()"
+  let doE = do { _ <- ask ; mzero } `mplus` return () :: MaybeT (Reader Int) ()
+      doF = do { _ <- ask ; mzero } `mplus` return () :: ReaderT Int (Maybe) ()
+  line "Running with Reader data 2"
+  let resultE = runReader (runMaybeT doE) 2
+  -- runMaybe = id
+  let resultF = runReaderT doF 2
+  line $ "Monad = MaybeT (Reader Int), result: " ++ show resultE
+  line $ "Monad = ReaderT Int (Maybe), result: " ++ show resultF
+
   line "Conclusion: Maybe and Reader commute."
   return ()
 
@@ -103,6 +114,17 @@ maybeState = do
   let resultD = runStateT doD 3
   line $ "Monad = MaybeT (State Int), result: " ++ show resultC
   line $ "Monad = StateT Int (Maybe), result: " ++ show resultD
+
+  line "do { x <- get ; put (x+1) ; mzero } `mplus` return ()"
+  let doE = do { x <- get ; put (x+1) ; mzero } `mplus` return () :: MaybeT (State Int) ()
+      doF = do { x <- get ; put (x+1) ; mzero } `mplus` return () :: StateT Int (Maybe) ()
+  line "Running with State data 3"
+  let resultE = runState (runMaybeT doE) 3
+  -- runMaybe = id
+  let resultF = runStateT doF 3
+  line $ "Monad = MaybeT (State Int), result: " ++ show resultE
+  line $ "Monad = StateT Int (Maybe), result: " ++ show resultF
+
   line "Conclusion: Maybe and State do not commute, because the resulting state"
   line "of a failing computation is handled differently."
   return ()
@@ -127,6 +149,16 @@ maybeWriter = do
   let resultD = runWriterT doD
   line $ "Monad = MaybeT (Writer String), result: " ++ show resultC
   line $ "Monad = WriterT String (Maybe), result: " ++ show resultD
+
+  line "do { tell \"foo\" ; mzero } `mplus` tell \"bar\""
+  let doE = do { tell "foo" ; mzero } `mplus` tell "bar" :: MaybeT (Writer String) ()
+      doF = do { tell "foo" ; mzero } `mplus` tell "bar" :: WriterT String (Maybe) ()
+  let resultE = runWriter (runMaybeT doE)
+  -- runMaybe = id
+  let resultF = runWriterT doF
+  line $ "Monad = MaybeT (Writer String), result: " ++ show resultE
+  line $ "Monad = WriterT String (Maybe), result: " ++ show resultF
+
   line "Conclusion: Maybe and Writer do not commute, because the written value"
   line "of a failing computation is handled differently."
   return ()
@@ -151,6 +183,16 @@ exceptReader = do
   let resultD = runExcept (runReaderT doD 2)
   line $ "Monad = ExceptT String (Reader Int), result: " ++ show resultC
   line $ "Monad = ReaderT Int (Except String), result: " ++ show resultD
+
+  line "do { _ <- ask ; throwError \"error\" } `catchError` \\_ -> return ()"
+  let doE = do { _ <- ask ; throwError "error" } `catchError` \_ -> return () :: ExceptT String (Reader Int) ()
+      doF = do { _ <- ask ; throwError "error" } `catchError` \_ -> return () :: ReaderT Int (Except String) ()
+  line "Running with Reader data 2"
+  let resultE = runReader (runExceptT doE) 2
+  let resultF = runExcept (runReaderT doF 2)
+  line $ "Monad = ExceptT String (Reader Int), result: " ++ show resultE
+  line $ "Monad = ReaderT Int (Except String), result: " ++ show resultF
+
   line "Conclusion: Except and Reader commute."
   return ()
 
@@ -174,6 +216,16 @@ exceptState = do
   let resultD = runExcept (runStateT doD 3)
   line $ "Monad = ExceptT String (State Int), result: " ++ show resultC
   line $ "Monad = StateT Int (Except String), result: " ++ show resultD
+
+  line "do { x <- get ; put (x+1) ; throwError \"error\" } `catchError` \\_ -> return ()"
+  let doE = do { x <- get ; put (x+1) ; throwError "error" } `catchError` \_ -> return () :: ExceptT String (State Int) ()
+      doF = do { x <- get ; put (x+1) ; throwError "error" } `catchError` \_ -> return () :: StateT Int (Except String) ()
+  line "Running with State data 3"
+  let resultE = runState (runExceptT doE) 3
+  let resultF = runExcept (runStateT doF 3)
+  line $ "Monad = ExceptT String (State Int), result: " ++ show resultE
+  line $ "Monad = StateT Int (Except String), result: " ++ show resultF
+
   line "Conclusion: Except and State do not commute, because the resulting"
   line "state of a failing computation is handled differently."
   return ()
@@ -196,6 +248,15 @@ exceptWriter = do
   let resultD = runExcept (runWriterT doD)
   line $ "Monad = ExceptT String (Writer String), result: " ++ show resultC
   line $ "Monad = WriterT String (Except String), result: " ++ show resultD
+
+  line "do { tell \"foo\" ; throwError \"bar\" } `catchError` tell"
+  let doE = do { tell "foo" ; throwError "bar" } `catchError` tell :: ExceptT String (Writer String) ()
+      doF = do { tell "foo" ; throwError "bar" } `catchError` tell :: WriterT String (Except String) ()
+  let resultE = runWriter (runExceptT doE)
+  let resultF = runExcept (runWriterT doF)
+  line $ "Monad = ExceptT String (Writer String), result: " ++ show resultE
+  line $ "Monad = WriterT String (Except String), result: " ++ show resultF
+
   line "Conclusion: Except and Writer do not commute, because the written value"
   line "of a failing computation is handled differently."
   return ()
