@@ -128,7 +128,7 @@ maybeWriter = do
   line $ "Monad = MaybeT (Writer String), result: " ++ show resultC
   line $ "Monad = WriterT String (Maybe), result: " ++ show resultD
   line "Conclusion: Maybe and Writer do not commute, because the written value"
-  line "is handled differently."
+  line "of a failing computation is handled differently."
   return ()
 
 exceptReader :: Writer String ()
@@ -166,7 +166,7 @@ exceptState = do
   line $ "Monad = ExceptT String (State Int), result: " ++ show resultA
   line $ "Monad = StateT Int (Except String), result: " ++ show resultB
 
-  line "do { x <- get ; put (x+1) ; mzero }"
+  line "do { x <- get ; put (x+1) ; throwError \"error\" }"
   let doC = do { x <- get ; put (x+1) ; throwError "error" } :: ExceptT String (State Int) ()
       doD = do { x <- get ; put (x+1) ; throwError "error" } :: StateT Int (Except String) ()
   line "Running with State data 3"
