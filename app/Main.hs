@@ -52,7 +52,8 @@ stateWriter = do
   let resultB = runState (runWriterT doB) 3
   line $ "Monad = StateT Int (Writer String), result: " ++ show resultA
   line $ "Monad = WriterT String (State Int), result: " ++ show resultB
-  line "Conclusion: State and Writer essentially commute."
+  line "Conclusion: State and Writer essentially commute: the result types"
+  line "differ, but they contain the same information."
   return ()
 
 maybeReader :: Writer String ()
@@ -280,6 +281,8 @@ allPairs = do
   exceptState
   nl
   exceptWriter
+  nl
+  line "Skipping MaybeT Except & ExceptT Maybe because that makes little sense."
 
 main :: IO ()
 main = putStr $ execWriter allPairs
