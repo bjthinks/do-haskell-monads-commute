@@ -178,6 +178,28 @@ exceptState = do
   line "state of a failing computation is handled differently."
   return ()
 
+exceptWriter :: Writer String ()
+exceptWriter = do
+  line "Composing Except and Writer monads."
+  line "do { tell \"xyzzy\" }"
+  let doA = do { tell "xyzzy" } :: ExceptT String (Writer String) ()
+      doB = do { tell "xyzzy" } :: WriterT String (Except String) ()
+  let resultA = runWriter (runExceptT doA)
+  let resultB = runExcept (runWriterT doB)
+  line $ "Monad = ExceptT String (Writer String), result: " ++ show resultA
+  line $ "Monad = WriterT String (Except String), result: " ++ show resultB
+
+  line "do { tell \"xyzzy\" ; throwError \"error\" }"
+  let doC = do { tell "xyzzy" ; throwError "error" } :: ExceptT String (Writer String) ()
+      doD = do { tell "xyzzy" ; throwError "error" } :: WriterT String (Except String) ()
+  let resultC = runWriter (runExceptT doC)
+  let resultD = runExcept (runWriterT doD)
+  line $ "Monad = ExceptT String (Writer String), result: " ++ show resultC
+  line $ "Monad = WriterT String (Except String), result: " ++ show resultD
+  line "Conclusion: Except and Writer do not commute, because the written value"
+  line "of a failing computation is handled differently."
+  return ()
+
 allPairs :: Writer String ()
 allPairs = do
   readerState
@@ -195,6 +217,8 @@ allPairs = do
   exceptReader
   nl
   exceptState
+  nl
+  exceptWriter
 
 main :: IO ()
 main = putStr $ execWriter allPairs
