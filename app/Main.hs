@@ -25,7 +25,6 @@ readerState = do
   line $ "Monad = ReaderT Int (State Int), result: " ++ show resultA
   line $ "Monad = StateT Int (Reader Int), result: " ++ show resultB
   line "Conclusion: Reader and State commute."
-  return ()
 
 readerWriter :: Writer String ()
 readerWriter = do
@@ -39,7 +38,6 @@ readerWriter = do
   line $ "Monad = ReaderT Int (Writer String), result: " ++ show resultA
   line $ "Monad = WriterT String (Reader Int), result: " ++ show resultB
   line "Conclusion: Reader and Writer commute."
-  return ()
 
 stateWriter :: Writer String ()
 stateWriter = do
@@ -54,7 +52,6 @@ stateWriter = do
   line $ "Monad = WriterT String (State Int), result: " ++ show resultB
   line "Conclusion: State and Writer essentially commute: the result types"
   line "differ, but they contain the same information."
-  return ()
 
 maybeReader :: Writer String ()
 maybeReader = do
@@ -91,7 +88,6 @@ maybeReader = do
   line $ "Monad = ReaderT Int (Maybe), result: " ++ show resultF
 
   line "Conclusion: Maybe and Reader commute."
-  return ()
 
 maybeState :: Writer String ()
 maybeState = do
@@ -128,7 +124,6 @@ maybeState = do
 
   line "Conclusion: Maybe and State do not commute, because the resulting state"
   line "of a failing computation is handled differently."
-  return ()
 
 maybeWriter :: Writer String ()
 maybeWriter = do
@@ -162,7 +157,6 @@ maybeWriter = do
 
   line "Conclusion: Maybe and Writer do not commute, because the written value"
   line "of a failing computation is handled differently."
-  return ()
 
 exceptReader :: Writer String ()
 exceptReader = do
@@ -195,7 +189,6 @@ exceptReader = do
   line $ "Monad = ReaderT Int (Except String), result: " ++ show resultF
 
   line "Conclusion: Except and Reader commute."
-  return ()
 
 exceptState :: Writer String ()
 exceptState = do
@@ -229,7 +222,6 @@ exceptState = do
 
   line "Conclusion: Except and State do not commute, because the resulting"
   line "state of a failing computation is handled differently."
-  return ()
 
 exceptWriter :: Writer String ()
 exceptWriter = do
@@ -260,7 +252,52 @@ exceptWriter = do
 
   line "Conclusion: Except and Writer do not commute, because the written value"
   line "of a failing computation is handled differently."
-  return ()
+
+exceptMaybe :: Writer String ()
+exceptMaybe = do
+  line "Composing Except and Maybe monads."
+  line "do { return () }"
+  let doY = do { return () } :: ExceptT String Maybe ()
+      doZ = do { return () } :: MaybeT (Except String) ()
+  let resultY = runExceptT doY -- runMaybe = id
+  let resultZ = runExcept (runMaybeT doZ)
+  line $ "Monad = ExceptT String (Maybe String), result: " ++ show resultY
+  line $ "Monad = MaybeT String (Except String), result: " ++ show resultZ
+
+  line "do { Nothing }"
+  let doA = do { lift Nothing } :: ExceptT String Maybe ()
+      doB = do { MaybeT (return Nothing) } :: MaybeT (Except String) ()
+  let resultA = runExceptT doA -- runMaybe = id
+  let resultB = runExcept (runMaybeT doB)
+  line $ "Monad = ExceptT String (Maybe String), result: " ++ show resultA
+  line $ "Monad = MaybeT String (Except String), result: " ++ show resultB
+
+  line "do { throwError \"error\" }"
+  let doC = do { throwError "error" } :: ExceptT String Maybe ()
+      doD = do { lift (throwError "error") } :: MaybeT (Except String) ()
+  let resultC = runExceptT doC -- runMaybe = id
+  let resultD = runExcept (runMaybeT doD)
+  line $ "Monad = ExceptT String (Maybe String), result: " ++ show resultC
+  line $ "Monad = MaybeT String (Except String), result: " ++ show resultD
+
+  line "do { Nothing ; throwError \"error\" }"
+  let doE = do { lift Nothing >> throwError "error" } :: ExceptT String Maybe ()
+      doF = do { MaybeT (return Nothing) >> lift (throwError "error") } :: MaybeT (Except String) ()
+  let resultE = runExceptT doE -- runMaybe = id
+  let resultF = runExcept (runMaybeT doF)
+  line $ "Monad = ExceptT String (Maybe String), result: " ++ show resultE
+  line $ "Monad = MaybeT String (Except String), result: " ++ show resultF
+
+  line "do { throwError \"error\" >> Nothing }"
+  let doG = do { throwError "error" >> lift Nothing } :: ExceptT String Maybe ()
+      doH = do { lift (throwError "error") >> MaybeT (return Nothing) } :: MaybeT (Except String) ()
+  let resultG = runExceptT doG -- runMaybe = id
+  let resultH = runExcept (runMaybeT doH)
+  line $ "Monad = ExceptT String (Maybe String), result: " ++ show resultG
+  line $ "Monad = MaybeT String (Except String), result: " ++ show resultH
+
+  line "Conclusion: Except and Maybe essentially commute: the result types"
+  line "differ, but they contain the same information."
 
 allPairs :: Writer String ()
 allPairs = do
@@ -282,7 +319,7 @@ allPairs = do
   nl
   exceptWriter
   nl
-  line "Skipping MaybeT Except & ExceptT Maybe because that makes little sense."
+  exceptMaybe
 
 main :: IO ()
 main = putStr $ execWriter allPairs
